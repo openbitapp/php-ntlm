@@ -1,9 +1,12 @@
 <?php
+declare(strict_types=1);
 /**
- * Contains \JamesIArmes\PhpNtlm\NTLMSoapClient.
+ * Contains \JamesIArmes\PhpNtlm\NTLMSoapClient improved by satala ondrej.
  */
 
 namespace jamesiarmes\PhpNtlm;
+
+use CurlHandle;
 
 /**
  * Soap Client using Microsoft's NTLM Authentication.
@@ -15,16 +18,14 @@ class SoapClient extends \SoapClient
     /**
      * cURL resource used to make the SOAP request
      *
-     * @var resource
+     * @var resource|false|CurlHandle
      */
     protected $ch;
 
     /**
      * Options passed to the client constructor.
-     *
-     * @var array
      */
-    protected $options;
+    protected array $options;
 
     /**
      * {@inheritdoc}
@@ -43,7 +44,7 @@ class SoapClient extends \SoapClient
      *   characters are stripped. This has no affect unless strip_bad_chars is
      *   true.
      */
-    public function __construct($wsdl, array $options = [])
+    public function __construct(?string $wsdl, array $options = [])
     {
         // Set missing indexes to their default value.
         $options += array(
@@ -68,8 +69,8 @@ class SoapClient extends \SoapClient
     /**
      * {@inheritdoc}
      */
-    public function __doRequest($request, $location, $action, $version, $one_way = 0)
-    {
+    public function __doRequest(string $request, string $location, string $action, int $version, bool $one_way = false): ?string
+	{
         $headers = $this->buildHeaders($action);
         $this->__last_request = $request;
         $this->__last_request_headers = $headers;
@@ -103,21 +104,19 @@ class SoapClient extends \SoapClient
     /**
      * {@inheritdoc}
      */
-    public function __getLastRequestHeaders()
-    {
+    public function __getLastRequestHeaders(): ?string
+	{
         return implode("\n", $this->__last_request_headers) . "\n";
     }
 
     /**
      * Returns the response code from the last request
      *
-     * @return integer
-     *
      * @throws \BadMethodCallException
      *   If no cURL resource has been initialized.
      */
-    public function getResponseCode()
-    {
+    public function getResponseCode(): int
+	{
         if (empty($this->ch)) {
             throw new \BadMethodCallException('No cURL resource has been '
                 . 'initialized. This is probably because no request has not '
@@ -129,12 +128,9 @@ class SoapClient extends \SoapClient
 
     /**
      * Builds the headers for the request.
-     *
-     * @param string $action
-     *   The SOAP action to be performed.
      */
-    protected function buildHeaders($action)
-    {
+    protected function buildHeaders(string $action): array
+	{
         return array(
             'Method: POST',
             'Connection: Keep-Alive',
@@ -178,16 +174,9 @@ class SoapClient extends \SoapClient
 
     /**
      * Builds an array of curl options for the request
-     *
-     * @param string $action
-     *   The SOAP action to be performed.
-     * @param string $request
-     *   The XML SOAP request.
-     * @return array
-     *   Array of curl options.
      */
-    protected function curlOptions($action, $request)
-    {
+    protected function curlOptions(string $action, string $request): array
+	{
         $options = $this->options['curlopts'] + array(
             CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_RETURNTRANSFER => true,
@@ -212,7 +201,7 @@ class SoapClient extends \SoapClient
      * @param string $response
      *   The response from the cURL request, including headers and body.
      */
-    public function parseResponse($response)
+    public function parseResponse(string $response)
     {
         // Parse the response and set the last response and headers.
         $info = curl_getinfo($this->ch);
