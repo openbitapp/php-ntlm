@@ -27,7 +27,18 @@ class SoapClient extends \SoapClient
      */
     protected array $options;
 
-    /**
+	private string $__last_request;
+
+	/**
+	 * @var string[]
+	 */
+	private array $__last_request_headers;
+
+	private string|false $__last_response;
+
+	private string|false $__last_response_headers;
+
+	/**
      * {@inheritdoc}
      *
      * Additional options:
@@ -69,7 +80,7 @@ class SoapClient extends \SoapClient
     /**
      * {@inheritdoc}
      */
-    public function __doRequest(string $request, string $location, string $action, int $version, bool $one_way = false): ?string
+    public function __doRequest(string $request, string $location, string $action, int $version, bool $oneWay = false): ?string
 	{
         $headers = $this->buildHeaders($action);
         $this->__last_request = $request;
